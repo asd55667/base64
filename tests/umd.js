@@ -1,21 +1,22 @@
-var assert = assert || require("assert");
-var Base64 = Base64 || require("../base64.js");
+const test = require('ava')
+const Base64 = require('..');
 
-describe("umd module", function () {
-    if (typeof global !== "undefined") {
-        it("should not modify `global` variables", function () {
-            assert.equal("Base64" in global, false);
+test('umd module', () => {
+
+    if(typeof global !== "undefined") {
+        test('should not modify `global` variables', t => {
+            t.deepEqual("Base64" in global, false);
         });
-    } else if (typeof window !== "undefined") {
-        it("should inject `window` namespace", function () {
-            assert.equal("Base64" in window, true);
-            assert.equal(typeof window.Base64, 'object');
-            assert.equal("noConflict" in window.Base64, true);
+    } else if(typeof window !== "undefined") {
+        test('should inject `window` namespace', t => {
+            t.deepEqual("Base64" in window, true);
+            t.deepEqual(typeof window.Base64, 'object');
+            t.deepEqual("noConflict" in window.Base64, true);
         });
     }
-    it("should work with namespace and non-namespace usage both", function () {
-        assert.equal(!Base64.Base64, false);
-        assert.notEqual(Base64.Base64, Base64);
-        assert.equal(Base64.encode, Base64.Base64.encode);
+    test('should work with namespace and non-namespace usage both', t => {
+        t.deepEqual(!Base64.Base64, false);
+        t.notDeepEqual(Base64.Base64, Base64);
+        t.deepEqual(Base64.encode, Base64.Base64.encode);
     });
-});
+})

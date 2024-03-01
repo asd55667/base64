@@ -1,3 +1,4 @@
+const test = require('tape')
 const b64 = require('../')
 
 test('convert big data to base64', function (t) {

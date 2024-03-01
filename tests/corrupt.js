@@ -1,3 +1,4 @@
+const test = require('tape')
 const b64 = require('../')
 
 test('padding bytes found inside base64 string', function (t) {
