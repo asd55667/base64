@@ -8,22 +8,22 @@ function atob(str) {
         if (ch === ' ') continue
         stack.push(ch)
         if (stack.length === 4) {
-            output += atobAscii(stack)
+            output += consume(stack)
             stack.length = 0
         }
     }
 
     return output
 
-    function atobAscii(arr) {
+    function consume(arr) {
         const c1 = _decode(arr[0])
         const c2 = _decode(arr[1])
         /**
          * 0b 00(xxxxxx00 |
          * 0b        00xx)|0000
         */
-        const d1 = String.fromCharCode(((0x3f & c1) << 2) | (c2 >> 4))
-        if (arr[2] === '=' && arr[3] === '=') return d1
+        const d1 = ((0x3f & c1) << 2) | (c2 >> 4)
+        if (arr[2] === '=' && arr[3] === '=') return String.fromCharCode(d1)
 
         const c3 = _decode(arr[2])
         /**
@@ -31,8 +31,8 @@ function atob(str) {
          * 0b        00xx)|(xxxx0000 |
          * 0b             |   00xxxx)|xx
         */
-        const d2 = String.fromCharCode(((0x0f & c2) << 4) | (c3 >> 2))
-        if (arr[3] === '=') return d1 + d2
+        const d2 = ((0x0f & c2) << 4) | (c3 >> 2)
+        if (arr[3] === '=') return [d1, d2].map(v => String.fromCharCode(v)).join('')
 
         const c4 = _decode(arr[3])
         /**
@@ -41,8 +41,16 @@ function atob(str) {
          * 0b             |   00xxxx)|(xx000000
          * 0b             |          | 00xxxxxx)  
         */
-        const d3 = String.fromCharCode(((0x03 & c3) << 6) | c4)
-        return d1 + d2 + d3
+        const d3 = ((0x03 & c3) << 6) | c4
+
+        // not ascii
+        if ([d1, d2, d3].some(v => 0x80 & v)) {
+            if (isUnicode([d1, d2, d3])) {
+                console.log(d1, d2, d3)
+            }
+        }
+
+        return [d1, d2, d3].map(v => String.fromCharCode(v)).join('')
     }
 }
 
@@ -63,15 +71,14 @@ function btoa(str, urlSafe = false) {
 
         const ch = str[i - 1]
         const charCode = ch.charCodeAt()
-        if (!isAscii(charCode)) {
-            consume()
 
-            if (charCode >= 0x0800 && charCode <= 0xffff) {
-                const b1 = 0xe0 | charCode >> 12 & 0xf;
-                const b2 = 0x80 | charCode >> 6 & 0x3f;
-                const b3 = 0x80 | charCode & 0x3f;
-                stack.push(b1, b2, b3)
-            }
+        // 3-byte unicode
+        if (charCode >= 0x0800 && charCode <= 0xffff) {
+            consume()
+            const b1 = 0xe0 | charCode >> 12 & 0xf;
+            const b2 = 0x80 | charCode >> 6 & 0x3f;
+            const b3 = 0x80 | charCode & 0x3f;
+            stack.push(b1, b2, b3)
         } else stack.push(charCode)
         i += 1
     }
@@ -83,8 +90,6 @@ function btoa(str, urlSafe = false) {
         stack.length = 0
     }
 }
-
-
 
 function btoaAscii(str, urlSafe) {
     if (!str?.length) return ''
@@ -173,8 +178,13 @@ function isValid() {
     // 
 }
 
-function isAscii(charCode) {
-    return charCode < 2 ** 8
+function isUnicode(arr) {
+    const [d1, d2, d3, d4] = arr
+    if (arr.length === 1) return d1 < 2 ** 8
+    if (arr.length === 2) return d1 & 0xe0 && d2 & 0x80
+    if (arr.length === 3) return d1 & 0xe0 && d2 & 0x80 && d3 & 0x80
+    if (arr.length === 4) return d1 & 0xf0 && d2 & 0x80 && d3 & 0x80 && d4 & 0x80
+    return false
 }
 
 module.exports = {
