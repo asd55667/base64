@@ -8,14 +8,14 @@ function atob(str) {
         if (ch === ' ') continue
         stack.push(ch)
         if (stack.length === 4) {
-            output += consume(stack)
+            output += atobAscii(stack)
             stack.length = 0
         }
     }
 
     return output
 
-    function consume(arr) {
+    function atobAscii(arr) {
         const c1 = _decode(arr[0])
         const c2 = _decode(arr[1])
         /**
@@ -51,18 +51,52 @@ const m1 = 0x03
 const m2 = 0x0f
 const m3 = 0x3f
 
-function btoa(str) {
+function btoa(str, urlSafe = false) {
     str = String(str)
     if (!str.length) return ''
 
+    let output = ''
+    let i = 1
+    const stack = []
+    while (i <= str.length) {
+        if (stack.length === 3) consume()
+
+        const ch = str[i - 1]
+        const charCode = ch.charCodeAt()
+        if (!isAscii(charCode)) {
+            consume()
+
+            if (charCode >= 0x0800 && charCode <= 0xffff) {
+                const b1 = 0xe0 | charCode >> 12 & 0xf;
+                const b2 = 0x80 | charCode >> 6 & 0x3f;
+                const b3 = 0x80 | charCode & 0x3f;
+                stack.push(b1, b2, b3)
+            }
+        } else stack.push(charCode)
+        i += 1
+    }
+    consume()
+    return output
+
+    function consume() {
+        output += btoaAscii(stack, urlSafe)
+        stack.length = 0
+    }
+}
+
+
+
+function btoaAscii(str, urlSafe) {
+    if (!str?.length) return ''
+    console.assert(str.length <= 3, `length of ${str} should smaller than 4`)
     /**
      * 0b (xxxxxx)| 
      *            |(xx0000)
      */
-    const v1 = str[0].charCodeAt()
-    const ch1 = _encode(v1 >> 2)
+    const v1 = str[0]
+    const ch1 = _encode(v1 >> 2, urlSafe)
     if (str.length === 1) {
-        const ch2 = _encode((m1 & v1) << 4)
+        const ch2 = _encode((m1 & v1) << 4, urlSafe)
         return [ch1, ch2, '=='].join('')
     }
 
@@ -71,10 +105,10 @@ function btoa(str) {
      *            (xx|xxxx)
      *               |     (xxxx00)
      */
-    const v2 = str[1].charCodeAt()
-    const ch2 = _encode(((m1 & v1) << 4) | (v2 >> 4))
+    const v2 = str[1]
+    const ch2 = _encode(((m1 & v1) << 4) | (v2 >> 4), urlSafe)
     if (str.length === 2) {
-        const ch3 = _encode((m2 & v2) << 2)
+        const ch3 = _encode((m2 & v2) << 2, urlSafe)
         return [ch1, ch2, ch3, '='].join('')
     }
 
@@ -84,14 +118,13 @@ function btoa(str) {
      *               |      (xxxx|xx)
      *               |           |   (xxxxxx)
      */
-    const v3 = str[2].charCodeAt()
-    const ch3 = _encode(((m2 & v2) << 2) | (v3 >> 6))
-    const ch4 = _encode(m3 & v3)
-    return [ch1, ch2, ch3, ch4].join('') + btoa(str.slice(3))
+    const v3 = str[2]
+    const ch3 = _encode(((m2 & v2) << 2) | (v3 >> 6), urlSafe)
+    const ch4 = _encode(m3 & v3, urlSafe)
+    return [ch1, ch2, ch3, ch4].join('')
 }
 
-
-function _encode(n) {
+function _encode(n, urlSafe) {
     console.assert(n >= 0 && n < 64, `${n} should be in range 0-63`);
     if (n >= 0 && n < 26) {
         return String.fromCharCode(n + 'A'.charCodeAt())
@@ -100,8 +133,8 @@ function _encode(n) {
     } else if (n >= 52 && n <= 61) {
         return String.fromCharCode(n - 52 + '0'.charCodeAt())
     }
-    if (n === 62) return '+'
-    if (n === 63) return '/'
+    if (n === 62) return urlSafe ? '-' : '+'
+    if (n === 63) return urlSafe ? '_' : '/'
 }
 
 function _decode(ch) {
@@ -118,13 +151,43 @@ function _decode(ch) {
         return code - '0'.charCodeAt() + 52
     }
 
-    if (ch === '+') return 62
-    if (ch === '-') return 63
+    if (ch === '+' || ch === '-') return 62
+    if (ch === '/' || ch === '_') return 63
 
     console.assert(0, `invalid character ${ch}.`)
+}
+
+function toUint8Array() {
+    // 
+}
+
+function fromUint8Array() {
+    // 
+}
+
+function encodeURI(str) {
+    return btoa(str, true)
+}
+
+function isValid() {
+    // 
+}
+
+function isAscii(charCode) {
+    return charCode < 2 ** 8
 }
 
 module.exports = {
     atob,
     btoa,
+    encode: btoa,
+    decode: atob,
+    toBase64: btoa,
+    fromBase64: atob,
+    toUint8Array,
+    fromUint8Array,
+    encodeURI,
+    toBase64URI: encodeURI,
+    isValid,
+    extendString: () => { }
 }
