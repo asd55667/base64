@@ -46,7 +46,6 @@ function atob(str) {
         // not ascii
         if ([d1, d2, d3].some(v => 0x80 & v)) {
             if (isUnicode([d1, d2, d3])) {
-                // console.log(d1, d2, d3)
                 const b1 = (0x0f & d1) << 12
                 const b2 = (0x3f & d2) << 6
                 const b3 = 0x3f & d3
@@ -71,28 +70,40 @@ function btoa(str, urlSafe = false) {
     let i = 1
     const stack = []
     while (i <= str.length) {
-        if (stack.length === 3) consume()
-
         const ch = str[i - 1]
-        const charCode = ch.charCodeAt()
+        let charCode = ch.charCodeAt()
 
-        // 3-byte unicode
+        // high surrogate check
+        if (charCode >= 0xD800 && charCode <= 0xDBFF) {
+            const L = str[i].charCodeAt()
+            if (L && L >= 0xDC00 && L <= 0xDFFF) {
+                charCode = 0x10000 + (charCode - 0xD800) * 0x400 + (L - 0xDC00)
+                i += 1
+            }
+        }
+
         if (charCode >= 0x0800 && charCode <= 0xffff) {
-            consume()
+            // 3-byte unicode
             const b1 = 0xe0 | charCode >> 12 & 0xf;
             const b2 = 0x80 | charCode >> 6 & 0x3f;
             const b3 = 0x80 | charCode & 0x3f;
             stack.push(b1, b2, b3)
+            // 4-byte unicode
+        } else if (charCode >= 0x10000 && charCode <= 0x10ffff) {
+            const b1 = 0xf0 | charCode >> 18 & 0x7
+            const b2 = 0x80 | charCode >> 12 & 0x3f
+            const b3 = 0x80 | charCode >> 6 & 0x3f
+            const b4 = 0x80 | charCode & 0x3f
+            stack.push(b1, b2, b3, b4)
         } else stack.push(charCode)
         i += 1
     }
-    consume()
-    return output
-
-    function consume() {
-        output += btoaAscii(stack, urlSafe)
-        stack.length = 0
+    let j = 0;
+    while (j <= stack.length) {
+        output += btoaAscii(stack.slice(j, j + 3), urlSafe)
+        j += 3
     }
+    return output
 }
 
 function btoaAscii(str, urlSafe) {
@@ -106,7 +117,7 @@ function btoaAscii(str, urlSafe) {
     const ch1 = _encode(v1 >> 2, urlSafe)
     if (str.length === 1) {
         const ch2 = _encode((m1 & v1) << 4, urlSafe)
-        return [ch1, ch2, '=='].join('')
+        return [ch1, ch2, urlSafe ? '' : "=="].join('')
     }
 
     /**
