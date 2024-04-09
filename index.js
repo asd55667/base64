@@ -46,7 +46,11 @@ function atob(str) {
         // not ascii
         if ([d1, d2, d3].some(v => 0x80 & v)) {
             if (isUnicode([d1, d2, d3])) {
-                console.log(d1, d2, d3)
+                // console.log(d1, d2, d3)
+                const b1 = (0x0f & d1) << 12
+                const b2 = (0x3f & d2) << 6
+                const b3 = 0x3f & d3
+                return String.fromCharCode(b1 | b2 | b3)
             }
         }
 
