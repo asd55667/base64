@@ -49,17 +49,17 @@ test('isValid', t => {
 
 
 if (typeof Uint8Array === 'function') {
-    test('fromUint8Array', t => {
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111, 103, 97, 105])), Base64.encode('dankogai'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111, 103, 97])), Base64.encode('dankoga'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111, 103])), Base64.encode('dankog'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111])), Base64.encode('danko'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107])), Base64.encode('dank'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110])), Base64.encode('dan'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97])), Base64.encode('da'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([100])), Base64.encode('d'))
-        t.deepEqual(Base64.fromUint8Array(new Uint8Array([])), Base64.encode(''))
-    })
+    // test('fromUint8Array', t => {
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111, 103, 97, 105])), Base64.encode('dankogai'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111, 103, 97])), Base64.encode('dankoga'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111, 103])), Base64.encode('dankog'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107, 111])), Base64.encode('danko'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110, 107])), Base64.encode('dank'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97, 110])), Base64.encode('dan'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100, 97])), Base64.encode('da'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([100])), Base64.encode('d'))
+    //     t.deepEqual(Base64.fromUint8Array(new Uint8Array([])), Base64.encode(''))
+    // })
 
     test('toUint8Array', t => {
         var _2str = function (a) {

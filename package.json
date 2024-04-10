@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "ava tests/a* tests/e* tests/y*"
+    "test": "ava tests/a* tests/d* tests/e* tests/y*"
   },
   "keywords": [],
   "author": "",
