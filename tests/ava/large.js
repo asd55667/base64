@@ -1,5 +1,5 @@
 const test = require('ava')
-const Base64 = require('..');
+const Base64 = require('../..');
 
 var seed = function () {
     var a, i;

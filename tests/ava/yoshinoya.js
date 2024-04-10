@@ -1,5 +1,5 @@
 const test = require('ava')
-const Base64 = require('..');
+const Base64 = require('../..');
 
 test('Yoshinoya', t => {
     t.deepEqual(Base64.encode('𠮷野家'), '8KCut+mHjuWutg==')

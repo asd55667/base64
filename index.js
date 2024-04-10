@@ -5,6 +5,43 @@ function atob(str) {
     return _atob(str.split('').filter(ch => ch !== ' '))
 }
 
+function _atob(arr) {
+    let output = ''
+    const bytes = toUint8Array(arr)
+    let i = 0
+    while (i < bytes.length) {
+        const d1 = bytes[i]
+        const d2 = bytes[i + 1]
+        const d3 = bytes[i + 2]
+        const d4 = bytes[i + 3]
+
+        if (isUnicode([d1, d2, d3, d4])) {
+            // console.log('4byte unicode', [d1, d2, d3, d4])
+            const b1 = (0x07 & d1) << 18
+            const b2 = (0x3f & d2) << 12
+            const b3 = (0x3f & d3) << 6
+            const b4 = 0x3f & d4
+            const val = (b1 | b2 | b3 | b4) - 0x10000
+            const H = (val >> 10) + 0xD800
+            const L = (val & 0x03ff) + 0xDC00
+            output += String.fromCharCode(H) + String.fromCharCode(L)
+            i += 4
+        } else if (isUnicode([d1, d2, d3])) {
+            // console.log('3byte unicode', [d1, d2, d3])
+            const b1 = (0x0f & d1) << 12
+            const b2 = (0x3f & d2) << 6
+            const b3 = 0x3f & d3
+            output += String.fromCharCode(b1 | b2 | b3)
+            i += 3
+        } else {
+            output += [d1, d2, d3, d4].filter(Number.isInteger).map(v => String.fromCharCode(v)).join('')
+            i += 4
+        }
+
+    }
+    return output
+}
+
 function toUint8Array(arr) {
     let i = 0
     const output = []
@@ -51,41 +88,6 @@ function toUint8Array(arr) {
         const d3 = ((0x03 & c3) << 6) | c4
         output.push(d1, d2, d3)
         i += 4
-    }
-    return output
-}
-
-function _atob(arr) {
-    let output = ''
-    const bytes = toUint8Array(arr)
-    let i = 0
-    while (i < bytes.length) {
-        const d1 = bytes[i]
-        const d2 = bytes[i + 1]
-        const d3 = bytes[i + 2]
-        const d4 = bytes[i + 3]
-
-        if (isUnicode([d1, d2, d3, d4])) {
-            const b1 = (0x07 & d1) << 18
-            const b2 = (0x3f & d2) << 12
-            const b3 = (0x3f & d3) << 6
-            const b4 = 0x3f & d4
-            const val = (b1 | b2 | b3 | b4) - 0x10000
-            const H = (val >> 10) + 0xD800
-            const L = (val & 0x03ff) + 0xDC00
-            output += String.fromCharCode(H) + String.fromCharCode(L)
-            i += 4
-        } else if (isUnicode([d1, d2, d3])) {
-            const b1 = (0x0f & d1) << 12
-            const b2 = (0x3f & d2) << 6
-            const b3 = 0x3f & d3
-            output += String.fromCharCode(b1 | b2 | b3)
-            i += 3
-        } else {
-            output += [d1, d2, d3, d4].filter(Number.isInteger).map(v => String.fromCharCode(v)).join('')
-            i += 4
-        }
-
     }
     return output
 }
@@ -223,11 +225,11 @@ function isValid(str) {
 function isUnicode(arr) {
     const [d1, d2, d3, d4] = arr
     if (arr.length === 1) return d1 < 2 ** 8
-    const b2 = (d2 & 0x80) === 0x80
+    const b2 = (d2 >> 6) === 0b10
     if (arr.length === 2) return (d1 & 0xe0) && b2
-    const b3 = (d3 & 0x80) === 0x80
-    if (arr.length === 3) return (d1 & 0xe0) === 0xe0 && b2 && b3
-    if (arr.length === 4) return (d1 & 0xf0) === 0xf0 && b2 && b3 && (d4 & 0x80) === 0x80
+    const b3 = (d3 >> 6) === 0b10
+    if (arr.length === 3) return (d1 >> 4) === 0xe && b2 && b3
+    if (arr.length === 4) return (d1 >> 3) === 0x1e && b2 && b3 && (d4 >> 6) === 0b10
     return false
 }
 
@@ -240,8 +242,9 @@ module.exports = {
     fromBase64: atob,
     toUint8Array,
     fromUint8Array,
+    toByteArray: toUint8Array,
+    byteLength: (str) => toUint8Array(str).length,
     encodeURI,
     toBase64URI: encodeURI,
     isValid,
-    extendString: () => { }
 }

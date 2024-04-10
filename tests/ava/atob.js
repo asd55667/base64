@@ -1,5 +1,5 @@
 const test = require('ava')
-const Base64 = require('..');
+const Base64 = require('../..');
 
 test('basic', t => {
     t.deepEqual(Base64.btoa('d'), 'ZA==')
