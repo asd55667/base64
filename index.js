@@ -94,16 +94,19 @@ function btoa(str, urlSafe = false) {
     str = String(str)
     if (!str.length) return ''
 
+    return fromUint8Array(str.split('').map(ch => ch.charCodeAt()), urlSafe)
+}
+
+function fromUint8Array(arr, urlSafe) {
     let output = ''
     let i = 1
     const stack = []
-    while (i <= str.length) {
-        const ch = str[i - 1]
-        let charCode = ch.charCodeAt()
+    while (i <= arr.length) {
+        let charCode = arr[i - 1]
 
         // high surrogate check
         if (charCode >= 0xD800 && charCode <= 0xDBFF) {
-            const L = str[i].charCodeAt()
+            const L = arr[i]
             if (L && L >= 0xDC00 && L <= 0xDFFF) {
                 charCode = 0x10000 + (charCode - 0xD800) * 0x400 + (L - 0xDC00)
                 i += 1
@@ -203,10 +206,6 @@ function _decode(ch, check = true) {
     if (ch === '/' || ch === '_') return 63
 
     check && console.assert(0, `invalid character ${ch}.`)
-}
-
-function fromUint8Array(array) {
-    // 
 }
 
 function encodeURI(str) {
