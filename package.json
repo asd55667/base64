@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "ava tests/ava/y*",
+    "test": "npm run test:tape && npm run test:ava",
+    "test:tape": "tape tests/tape/big-data.js",
     "test:ava": "ava tests/ava/*"
   },
   "keywords": [],

@@ -1,5 +1,5 @@
 const test = require('tape')
-const b64 = require('../')
+const b64 = require('../../')
 const checks = [
   'a',
   'aa',

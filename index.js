@@ -59,6 +59,10 @@ function toUint8Array(arr) {
 
         if (arr[i + 2] === '=' && arr[i + 3] === '=' || i + 2 === arr.length) {
             output.push(d1)
+            // same output with nodejs
+            break
+
+            // 
             i += (i + 2 === arr.length ? 2 : 4)
             continue
         }
@@ -104,7 +108,7 @@ function fromUint8Array(arr, urlSafe) {
     let i = 1
     const stack = []
     while (i <= arr.length) {
-        let charCode = arr[i - 1]
+        let charCode = complement(arr[i - 1])
 
         // high surrogate check
         if (charCode >= 0xD800 && charCode <= 0xDBFF) {
@@ -233,6 +237,17 @@ function isUnicode(arr) {
     return false
 }
 
+function complement(value, bitWidth = 8) {
+    if (value > 0) return value
+    let binaryString = Math.abs(value).toString(2);
+    binaryString = binaryString.padStart(bitWidth, '0');
+    const invertedBits = binaryString.split('').map(bit => bit === '0' ? '1' : '0').join('');
+    let twosComplement = (parseInt(invertedBits, 2) + 1).toString(2);
+    twosComplement = twosComplement.substring(twosComplement.length - bitWidth);
+    return parseInt(twosComplement, 2)
+}
+
+
 module.exports = {
     atob,
     btoa,
@@ -242,6 +257,7 @@ module.exports = {
     fromBase64: atob,
     toUint8Array,
     fromUint8Array,
+    fromByteArray: fromUint8Array,
     toByteArray: toUint8Array,
     byteLength: (str) => toUint8Array(str).length,
     encodeURI,
